@@ -1,0 +1,10 @@
+150
+8
+Rice 40 800
+Tomato 25 450
+Potato 30 360
+Jute 50 750
+Onion 20 340
+Brinjal 15 195
+Mango 35 665
+Banana 45 495

@@ -10,7 +10,11 @@ int road[20][20];
 int INF = 1000000;
 int seen[20];
 int group[20];
-
+int pn = 0;
+string pname[20];
+int pweight[20];
+int pprofit[20];
+int capacity = 0;
 
 int loadData(string fileName)
 {
@@ -67,7 +71,43 @@ int loadData(string fileName)
 
     return 1;
 }
+int loadProducts(string fileName)
+{
+    ifstream fin(fileName.c_str());
 
+    if(fin.fail())
+    {
+        return 0;
+    }
+
+    fin >> capacity;
+    if(fin.fail() || capacity <= 0)
+    {
+        return 0;
+    }
+
+    fin >> pn;
+    if(fin.fail() || pn < 1 || pn > 20)
+    {
+        return 0;
+    }
+
+    for(int i = 0; i < pn; i++)
+    {
+        fin >> pname[i] >> pweight[i] >> pprofit[i];
+
+        if(fin.fail())
+        {
+            return 0;
+        }
+        if(pweight[i] <= 0 || pprofit[i] <= 0)
+        {
+            return 0;
+        }
+    }
+
+    return 1;
+}
 int readNumber()
 {
     int x;
@@ -451,7 +491,67 @@ void kruskal()
     }
     cout << "Total length: " << total << " km" << endl;
 }
+void knapsack()
+{
+    int order[20];
+    double perKg[20];
 
+    for(int i = 0; i < pn; i++)
+    {
+        order[i] = i;
+        perKg[i] = (double)pprofit[i] / pweight[i];
+    }
+
+    for(int i = 0; i < pn - 1; i++)
+    {
+        for(int j = 0; j < pn - i - 1; j++)
+        {
+            if(perKg[order[j]] < perKg[order[j + 1]])
+            {
+                swap(order[j], order[j + 1]);
+            }
+        }
+    }
+
+    cout << "Truck capacity: " << capacity << " kg" << endl;
+    cout << "Products, best profit per kg first:" << endl;
+    for(int i = 0; i < pn; i++)
+    {
+        int p = order[i];
+        cout << pname[p] << " : " << pweight[p] << " kg, profit " << pprofit[p] << " taka, " << perKg[p] << " taka per kg" << endl;
+    }
+
+    double remain = capacity;
+    double total = 0;
+
+    cout << "Load the truck:" << endl;
+    for(int i = 0; i < pn; i++)
+    {
+        int p = order[i];
+
+        if(remain <= 0)
+        {
+            break;
+        }
+
+        if(pweight[p] <= remain)
+        {
+            cout << pname[p] << " : " << pweight[p] << " kg (full), profit " << pprofit[p] << " taka" << endl;
+            remain = remain - pweight[p];
+            total = total + pprofit[p];
+        }
+        else
+        {
+            double part = perKg[p] * remain;
+            cout << pname[p] << " : " << remain << " kg (part), profit " << part << " taka" << endl;
+            total = total + part;
+            remain = 0;
+        }
+    }
+
+    cout << "Truck load: " << capacity - remain << " kg" << endl;
+    cout << "Total profit: " << total << " taka" << endl;
+}
 int main()
 {
     string fileName;
@@ -474,6 +574,7 @@ int main()
         cout << "4. Blocked road check (DFS)" << endl;
         cout << "5. Minimum road network (Prim)" << endl;
         cout << "6. Minimum road network (Kruskal)" << endl;
+        cout << "7. Best truck load (Fractional Knapsack)" << endl;
         cout << "0. Exit" << endl;
         cout << "Enter choice : ";
         choice = readNumber();
@@ -527,9 +628,24 @@ int main()
         {
             kruskal();
         }
+                else if(choice == 7)
+        {
+            string productFile;
+            cout << "Enter product file name : ";
+            cin >> productFile;
+
+            if(loadProducts(productFile) == 0)
+            {
+                cout << "Could not read product file" << endl;
+            }
+            else
+            {
+                knapsack();
+            }
+        }
         else if(choice != 0)
         {
-            cout << "Wrong choice, enter 0 to 6" << endl;
+            cout << "Wrong choice, enter 0 to 7" << endl;
         }
     }
     while(choice != 0);

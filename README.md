@@ -24,6 +24,7 @@ The program runs from a console menu:
 | 4 | Blocked road check: which places are cut off from the market | DFS |
 | 5 | Minimum road network that connects all places | Prim |
 | 6 | Minimum road network that connects all places | Kruskal |
+| 7 | Best truck load: which products to carry for the highest profit within the truck capacity (products can be taken in part) | Fractional Knapsack (Greedy) |
 | 0 | Exit | – |
 
 Other points:
@@ -31,6 +32,7 @@ Other points:
 - The road network is an undirected weighted graph stored as an adjacency matrix.
 - Wrong keyboard input and invalid data files are handled (for example, a missing file, a road that joins a place to itself, or a distance of 0 or less).
 - The blocked road check does not change the network, so later menu choices still use the full data.
+- Option 7 reads a separate product file and does not use the road network.
 
 ## Algorithms and Complexity
 
@@ -43,8 +45,11 @@ Other points:
 | DFS | O(V²) |
 | Prim | O(V²) |
 | Kruskal | O(E²), because bubble sort is used to sort the roads |
+| Fractional Knapsack | O(P²), because bubble sort is used to sort the products (`P` is the number of products) |
 
-The full explanation, pseudocode and analysis are in the report in the `docs/` folder.
+> **Note:** The report and the presentation in the `docs/` folder were written for the first version of the project (menu options 1 to 6). Option 7 (Fractional Knapsack) was added later and is **not** described in them. The complexity of option 7 above comes from reading the code.
+
+The full explanation, pseudocode and analysis of options 1 to 6 are in the report in the `docs/` folder.
 
 ## Technologies Used
 
@@ -63,7 +68,8 @@ farm-to-market-route-planner/
 ├── src/
 │   └── route_planner.cpp
 ├── data/
-│   └── chandpur_data.txt
+│   ├── chandpur_data.txt
+│   └── products_data.txt
 └── docs/
     ├── Farm_to_Market_Route_Planner_Report.pdf
     └── Farm_to_Market_Route_Planner.pptx
@@ -93,7 +99,11 @@ When the program asks for the data file name, type:
 data/chandpur_data.txt
 ```
 
-Then choose an option from the menu.
+Then choose an option from the menu. If you choose option 7, the program also asks for the product file name. Type:
+
+```
+data/products_data.txt
+```
 
 ## Data File Format
 
@@ -118,6 +128,27 @@ a b km
 
 To use another area, create a new file in this format and type its name when the program asks.
 
+## Product Data File Format (option 7)
+
+Option 7 reads a second text file in this format:
+
+```
+truck capacity in kg
+number of products
+name weight_in_kg total_profit
+name weight_in_kg total_profit
+...
+```
+
+- The capacity must be more than 0.
+- The number of products is between 1 and 20.
+- The weight and the profit of each product must be more than 0. The profit is the total profit of the whole weight of that product.
+- Product names are written without spaces.
+
+The file `data/products_data.txt` has 8 products and a truck capacity of 150 kg.
+
+> The weights and profits are demonstration values. They are not real market prices.
+
 ## Sample Dataset: Chandpur District
 
 The file `data/chandpur_data.txt` has 8 upazilas of Chandpur District and 13 roads. Place 0 (`Chandpur_Sadar`) is the main market.
@@ -136,14 +167,32 @@ The file `data/chandpur_data.txt` has 8 upazilas of Chandpur District and 13 roa
 
 Prim and Kruskal choose the same 7 roads in a different order, so both give 126 km.
 
+### Sample result for option 7 (Fractional Knapsack)
+
+Input file: `data/products_data.txt` (truck capacity 150 kg, 8 products).
+
+The program sorts the products by profit per kg (Rice 20, Mango 19, Tomato 18, Onion 17, Jute 15, Brinjal 13, Potato 12, Banana 11 taka per kg) and loads the best ones first:
+
+| Product | Loaded | Profit (taka) |
+|---------|--------|---------------|
+| Rice | 40 kg (full) | 800 |
+| Mango | 35 kg (full) | 665 |
+| Tomato | 25 kg (full) | 450 |
+| Onion | 20 kg (full) | 340 |
+| Jute | 30 kg (part of 50 kg) | 450 |
+
+Truck load: 150 kg. **Total profit: 2705 taka.**
+
 ## Limitations
 
-- At most 20 places (the arrays have a fixed size).
+- At most 20 places and at most 20 products (the arrays have a fixed size).
 - Place 0 is always the main market.
 - Only distance in km is used. Traffic, road condition and river routes are not included.
 - The blocked road check handles one road at a time.
 - Only one route is printed, even if two routes are equally good.
-- Kruskal uses bubble sort, so it is slow for large networks.
+- Option 7 assumes products can be taken in part (for example, by kg). It does not handle products that must be taken whole.
+- Option 7 is separate from the road network. It does not connect the truck load with the routes.
+- Kruskal and Fractional Knapsack use bubble sort, so they are slow for large inputs.
 - The adjacency matrix needs V × V memory.
 
 ## Future Work
